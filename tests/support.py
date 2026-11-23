@@ -1,23 +1,19 @@
-import importlib
 import json
-import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
+
+from bikemap.client import MapClient
+from bikemap.rendering import build_route_payload, save_image
+from bikemap.track import load_positions
 
 ROOT = Path(__file__).resolve().parents[1]
-if os.environ.get("BIKEMAP_REFERENCE") == "1":
-    subject = importlib.import_module("interviewer.solution")
-else:
-    from types import SimpleNamespace
-    from bikemap.client import MapClient
-    from bikemap.rendering import build_route_payload, save_image
-    from bikemap.track import load_positions
-    subject = SimpleNamespace(
-        MapClient=MapClient,
-        build_route_payload=build_route_payload,
-        save_image=save_image,
-        load_positions=load_positions,
-    )
+subject = SimpleNamespace(
+    MapClient=MapClient,
+    build_route_payload=build_route_payload,
+    save_image=save_image,
+    load_positions=load_positions,
+)
 
 
 def config():

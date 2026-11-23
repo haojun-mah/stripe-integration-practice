@@ -12,4 +12,4 @@ Checked November 23, 2026.
 
 3. The user's supplied account: clone a repository, implement two parts locally, use `json` and `requests`, test with two JSON inputs, and discuss production improvements.
 
-The generated code, synthetic 35-point ride, API authentication/error rules, validation requirements, renderer, tests, and reference answer are original exercise material. This pack has exactly two implementation parts. It does not predict the questions or policies in any future Stripe interview.
+The generated code, synthetic 35-point ride, API authentication/error rules, validation requirements, renderer, and tests are original exercise material. This pack has exactly two implementation parts. It does not predict the questions or policies in any future Stripe interview.

@@ -61,8 +61,6 @@ Part checks start their own server on an unused local port. They do not depend o
 
 Suggested timing: 5 minutes reading, 20 minutes part 1, 25 minutes part 2, 10 minutes validation and discussion. These are practice timings, not an official Stripe format.
 
-The `interviewer/` folder contains spoilers: a reference implementation and reviewer notes. Leave it closed while practicing.
-
 If port 8765 is busy:
 
 ```powershell

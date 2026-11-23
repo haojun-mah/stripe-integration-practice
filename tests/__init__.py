@@ -1,1 +1,1 @@
-"""Public acceptance tests; the harness can select a separate reference answer."""
+"""Public acceptance tests for the candidate implementation."""
