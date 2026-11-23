@@ -1,6 +1,6 @@
 """Provided local API and tiny PNG renderer. This is not candidate work.
 
-Run: python mock_server.py --port 8765
+Run: python -m service.server --port 8765
 Only the Python standard library is used. No external map requests are made.
 """
 

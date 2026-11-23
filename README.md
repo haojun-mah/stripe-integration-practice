@@ -1,70 +1,96 @@
-# Stripe integration practice: BikeMap
+# BikeMap: a one-hour Python integration round
 
-A small Python repo for a 60-minute integration mock. There are **two parts**, **two JSON input files**, and four deliberately unfinished functions. You will read an existing project, consult an API contract, call a real local HTTP service with `requests`, and write a PNG.
+Build a downloadable map of a bicycle ride using `json` and `requests`.
 
-This is an original practice adaptation, not a copy of Stripe's private repo. The two-part organization follows the context you provided. Public reports on Prachub and 1Point3Acres supply the BikeMap theme; the local service, fixtures, tests, and exact contract are ours. See [sources](docs/SOURCES.md).
+**Edit only `exercise.py`. There are two functions to complete.** The local map service and command-line wiring are provided. You may add helpers and consult library documentation.
 
-## Start here
+## Setup
 
-Python 3.10+ is required. In PowerShell:
+Python 3.10+:
 
 ```powershell
 git clone https://github.com/haojun-mah/stripe-integration-practice.git
 cd stripe-integration-practice
 python -m pip install -r requirements.txt
-python mock_server.py
-```
-
-Keep that terminal running. In a second terminal, in the same directory:
-
-```powershell
-python app.py doctor
 python check.py --part setup
 ```
 
-Both should pass before you start. No account, paid service, or real API key is needed. The mock service listens on `127.0.0.1:8765` by default. Use Ctrl+C to stop it.
-
-## Your round
-
-Read [the candidate brief](CANDIDATE_BRIEF.md), then [the API documentation](docs/STATICMAP_API.md).
-
-Implement these functions, marked `TODO`:
-
-| File | Your responsibility |
-| --- | --- |
-| `bikemap/track.py` | Read GeoJSON and convert coordinates |
-| `bikemap/client.py` | Send the documented HTTP request and return image bytes |
-| `bikemap/rendering.py` | Save bytes; build the route-overlay request |
-
-The existing CLI and mock server are provided infrastructure. You do not need to implement graphics or change the server.
+Start the provided service in a separate terminal:
 
 ```powershell
-python app.py inspect
-python app.py base --output artifacts/base.png
+python -m service.server
+```
+
+Only read this page, `exercise.py`, and the two JSON inputs. You do not need to read or change `service/` or the test runner.
+
+## Part 1 -- Request a map (about 15 minutes)
+
+Implement `render_map(payload, output_path, base_url=BASE_URL)` in `exercise.py`.
+
+1. Send `payload` to the map API documented below.
+2. Use a positive finite request timeout.
+3. If the response is an HTTP error, let `requests.HTTPError` propagate before writing any file. A transport error may propagate normally too.
+4. Save successful response bytes using the provided `write_png` helper and return its `Path`.
+
+The CLI loads `data/map_config.json` for you:
+
+```powershell
+python exercise.py base
 python check.py --part 1
-python app.py route --output artifacts/route.png
+```
+
+Open `artifacts/base.png`. It should contain a background grid.
+
+## Part 2 -- Add the ride (about 25 minutes)
+
+Implement `render_ride(ride_path, config_path, output_path, base_url=BASE_URL)`.
+
+1. Read the two JSON files. `ride.json` is GeoJSON; the route is at `features[0].geometry.coordinates`. Each pair is `[longitude, latitude]`, in track order. The config contains the base-map settings.
+2. Convert the coordinates to the API's `{"lat": ..., "lon": ...}` objects.
+3. Add a white `Start` marker at the first point and a blue `Stripe` marker at the last point.
+4. Add paths covering ten consecutive **segments** each, alternating blue, brown, blue, brown, starting with blue. Neighboring paths share their boundary point. Keep a shorter final group.
+5. Reuse `render_map` to request the image, save it, and return its `Path`.
+
+A segment connects two adjacent points. All input files are valid, have the shown shape, and contain at least two two-number coordinates. No general GeoJSON validation is required.
+
+```powershell
+python exercise.py ride
 python check.py --part 2
 python check.py --part all
 ```
 
-Open your output PNGs manually after each part. The server draws a synthetic local grid with the route, not real map tiles.
+Open `artifacts/ride.png`. Check both markers and continuity where the color changes. Tests cover short rides, exact group boundaries, and a remainder.
 
-Part checks start their own server on an unused local port. They do not depend on your manually running server. Candidate checks are **expected to fail until you implement the TODOs**; setup checks should already pass.
+## API quick reference
 
-## Reading order
+**POST** `http://127.0.0.1:8765/map.png`
 
-1. `CANDIDATE_BRIEF.md`
-2. `app.py` to follow the existing flow
-3. The two files in `data/`
-4. `docs/STATICMAP_API.md`
-5. The three candidate modules above
+Send a JSON object and the provided `API_HEADERS` constant from `exercise.py`.
 
-Suggested timing: 5 minutes reading, 20 minutes part 1, 25 minutes part 2, 10 minutes validation and discussion. These are practice timings, not an official Stripe format.
-
-If port 8765 is busy:
-
-```powershell
-python mock_server.py --port 8766
-python app.py doctor --base-url http://127.0.0.1:8766
-python app.py route --base-url http://127.0.0.1:8766
+```json
+{
+  "center": {"lat": 47.579, "lon": -122.31},
+  "width": 400,
+  "height": 600,
+  "zoom": 13,
+  "markers": [
+    {"color": "white", "label": "Start", "coord": {"lat": 47.57, "lon": -122.32}}
+  ],
+  "paths": [
+    {"color": "blue", "positions": [
+      {"lat": 47.57, "lon": -122.32},
+      {"lat": 47.58, "lon": -122.31}
+    ]}
+  ]
+}
 ```
+
+`markers` and `paths` are optional for a base map. Success is HTTP 200 with **PNG bytes**, not JSON. Errors are HTTP 4xx/5xx with an error body; do not save them as images. The development key is already supplied in `API_HEADERS` and requires no account.
+
+## Finish
+
+Allow 5 minutes to read and 15 minutes to test and discuss: What would you add for production? How would you diagnose a 400 or handle a timeout?
+
+The nine tests start their own local service, so checks do not need the manually running server. Setup checks pass immediately; implementation checks fail until the two TODOs are completed.
+
+This is original practice material inspired by reported Stripe integration exercises, not Stripe's actual repository. [Source notes](docs/SOURCES.md).
